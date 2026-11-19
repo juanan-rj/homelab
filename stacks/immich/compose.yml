@@ -1,5 +1,5 @@
-# Fotos en el disco USB (si no está montado, NO arranca). Sin reconocimiento de caras (my choice).
-# Ajustes como código en fotos/immich.json (la web no permite cambiarlos).
+# Photos live on the USB drive (the stack will NOT start if it is not mounted). Face recognition is disabled on purpose.
+# Settings are managed as code in fotos/immich.json (the web UI does not allow changing them).
 name: immich
 
 services:
@@ -63,7 +63,7 @@ services:
     security_opt:
       - no-new-privileges:true
     environment:
-      POSTGRES_PASSWORD: ${DB_PASSWORD:?falta DB_PASSWORD}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
       POSTGRES_USER: postgres
       POSTGRES_DB: immich
       POSTGRES_INITDB_ARGS: "--data-checksums"

@@ -1,4 +1,4 @@
-# Inventario de casa y garantías. Registro CERRADO salvo cuando lo abre el bloque 05c (HB_REGISTRO=true).
+# Home inventory and warranties. Sign-ups are CLOSED unless the setup script opens them (HB_REGISTRO=true).
 name: homebox
 
 services:

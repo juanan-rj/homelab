@@ -1,4 +1,4 @@
-# Los tres leen Docker en modo solo lectura (:ro). Nada de esto está expuesto a Internet.
+# All three read Docker in read-only mode (:ro). None of this is exposed to the Internet.
 name: panel
 
 services:
@@ -13,14 +13,14 @@ services:
       retries: 3
       start_period: 10s
     environment:
-    # Permisos requeridos por Homepage, Dozzle y Diun (estrictamente solo lectura):
-    # - CONTAINERS: 1 (/containers/json, /containers/{id}/stats para Homepage y /logs para Dozzle)
-    # - IMAGES: 1 (/images/json para Homepage y Diun)
-    # - INFO: 1 (/info para Homepage metricas del sistema Docker)
-    # - VERSION: 1 (/version para verificacion de API)
-    # - EVENTS: 1 (/events para Dozzle y Homepage eventos en vivo)
-    # - PING: 1 (/_ping para comprobacion rapida de conectividad)
-    # - POST: 0 bloquea cualquier mutacion, asegurando modo solo lectura
+    # Permissions required by Homepage, Dozzle and Diun (strictly read-only):
+    # - CONTAINERS: 1 (/containers/json, /containers/{id}/stats for Homepage and /logs for Dozzle)
+    # - IMAGES: 1 (/images/json for Homepage and Diun)
+    # - INFO: 1 (/info for Homepage Docker system metrics)
+    # - VERSION: 1 (/version for API version check)
+    # - EVENTS: 1 (/events for Dozzle and Homepage live events)
+    # - PING: 1 (/_ping for a quick connectivity check)
+    # - POST: 0 blocks any mutation, ensuring read-only mode
       CONTAINERS: "1"
       IMAGES: "1"
       INFO: "1"

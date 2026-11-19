@@ -1,8 +1,8 @@
 # ==============================================================================
-#  RSC Brain v0.7.1 (ericrisco/rsc-brain) — Memoria persistente MCP / Wiki
-#  - Imagen construida desde tag/commit fijado v0.7.1 (sin :latest)
-#  - Base de datos PostgreSQL 17.12 oficial en red interna aislada (unaccent + FTS ES/EN)
-#  - Expone HTTP/MCP :8090 unicamente hacia Caddy (https://brain.example.com) y bot
+#  RSC Brain v0.7.1 (ericrisco/rsc-brain): persistent MCP memory / wiki
+#  - Image built from the pinned tag/commit v0.7.1 (no :latest)
+#  - Official PostgreSQL 17.12 database on an isolated internal network (unaccent + ES/EN full-text search)
+#  - Exposes HTTP/MCP :8090 only to Caddy (https://brain.example.com) and the bot
 # ==============================================================================
 services:
   rsc-brain-db:
@@ -16,7 +16,7 @@ services:
     environment:
       POSTGRES_USER: rscbrain
       POSTGRES_DB: rscbrain
-      POSTGRES_PASSWORD: ${RSC_BRAIN_PG_PASSWORD:?falta RSC_BRAIN_PG_PASSWORD en .env}
+      POSTGRES_PASSWORD: ${RSC_BRAIN_PG_PASSWORD:?RSC_BRAIN_PG_PASSWORD is required in .env}
       TZ: Europe/Madrid
     volumes:
       - /opt/homelab/datos/rsc-brain/pgdata:/var/lib/postgresql/data
@@ -49,11 +49,11 @@ services:
       rsc-brain-db:
         condition: service_healthy
     environment:
-      RSC_BRAIN_DATABASE_URL: postgresql://rscbrain:${RSC_BRAIN_PG_PASSWORD:?falta RSC_BRAIN_PG_PASSWORD en .env}@rsc-brain-db:5432/rscbrain
+      RSC_BRAIN_DATABASE_URL: postgresql://rscbrain:${RSC_BRAIN_PG_PASSWORD:?RSC_BRAIN_PG_PASSWORD is required in .env}@rsc-brain-db:5432/rscbrain
       RSC_BRAIN_HOST: 0.0.0.0
       RSC_BRAIN_PORT: "8090"
       RSC_BRAIN_TIMEZONE: Europe/Madrid
-      RSC_BRAIN_SECRET: ${RSC_BRAIN_SECRET:?falta RSC_BRAIN_SECRET en .env}
+      RSC_BRAIN_SECRET: ${RSC_BRAIN_SECRET:?RSC_BRAIN_SECRET is required in .env}
       RSC_BRAIN_LOCAL_ONLY: "0"
       RSC_BRAIN_BACKUPS: /backups
       RSC_BRAIN_BACKUP_AT: "03:00"

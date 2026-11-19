@@ -1,4 +1,4 @@
-# sharevb/it-tools usa nginx-unprivileged y escucha en puerto 8080 (en lugar de 80).
+# sharevb/it-tools uses nginx-unprivileged and listens on port 8080 (instead of 80).
 name: it-tools
 
 services:

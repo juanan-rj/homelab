@@ -52,4 +52,4 @@ Replace `example.com` and the `192.168.1.x` addresses with your own.
 
 ## Notes
 
-This is a personal setup shared as a reference. Some comments inside the compose files are still in Spanish.
+This is a personal setup shared as a reference. Adjust paths, domains and addresses to your own environment.

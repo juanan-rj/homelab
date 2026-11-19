@@ -1,6 +1,6 @@
 name: opengym
 
-# Variables comunes de api y web: se escriben una vez y cada servicio las incluye con <<.
+# Shared api and web variables: written once, each service includes them with <<.
 x-opengym-env: &opengym-env
   PORT: "3000"
   RP_ID: gym.example.com

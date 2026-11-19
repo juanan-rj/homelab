@@ -1,4 +1,4 @@
-# Las credenciales (SLSKD_API_KEY, SLSKD_SLSK_USERNAME/PASSWORD opcionales) viven en /opt/homelab/secretos/musica.env (.env). Nunca aquí.
+# Credentials (SLSKD_API_KEY, optional SLSKD_SLSK_USERNAME/PASSWORD) live in /opt/homelab/secrets/musica.env (.env). Never here.
 name: musica
 
 services:

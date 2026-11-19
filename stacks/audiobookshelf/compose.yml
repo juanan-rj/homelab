@@ -13,7 +13,7 @@ services:
     volumes:
       - /opt/homelab/datos/audiobookshelf/config:/config
       - /opt/homelab/datos/audiobookshelf/metadata:/metadata
-      # Los audiolibros viven en el USB; /audiolibro los descarga aqui con qBittorrent.
+      # Audiobooks live on the USB drive; qBittorrent downloads them to /audiobooks.
       - /mnt/usb/media/audiolibros:/audiobooks
       - /opt/homelab/datos/audiobookshelf/podcasts:/podcasts
     networks:

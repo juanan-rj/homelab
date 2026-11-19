@@ -26,9 +26,9 @@ services:
       options:
         max-size: 10m
         max-file: "3"
-  # Proxy de solo lectura: el agente solo necesita listar contenedores (beszel.dev, CONTAINERS=1).
-  # Monta docker.sock en lugar del agente; no permite POST. Publica solo en 127.0.0.1
-  # porque el agente usa la red del host.
+  # Read-only proxy: the agent only needs to list containers (beszel.dev, CONTAINERS=1).
+  # Mounts docker.sock instead of the agent; POST is not allowed. It publishes only on 127.0.0.1
+  # because the agent uses the host network.
   socket-proxy-beszel:
     image: tecnativa/docker-socket-proxy:v0.5.0
     container_name: socket-proxy-beszel
@@ -80,7 +80,7 @@ services:
       - /opt/homelab/datos/beszel/socket:/beszel_socket
       - /mnt/usb/.beszel:/extra-filesystems/usb:ro
     env_file:
-      - ./beszel.env # Symlink hacia /opt/homelab/secretos/beszel.env (gestionado por fase30.sh/fase45.sh)
+      - ./beszel.env # Symlink to /opt/homelab/secrets/beszel.env (managed by the setup scripts)
     mem_limit: 64m
     logging:
       driver: json-file

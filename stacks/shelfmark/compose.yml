@@ -1,0 +1,42 @@
+name: shelfmark
+
+services:
+  shelfmark:
+    image: ghcr.io/calibrain/shelfmark-lite:v1.7.0@sha256:b8bbc8ae26282c9cc765162719d2090142edf6c93c01c1eb430e51b1fa746ef2
+    container_name: shelfmark
+    hostname: shelfmark
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Madrid
+      - EXT_BYPASSER_URL=http://flaresolverr:8191
+      - EXT_BYPASSER_PATH=/v1
+      - EXT_BYPASSER_TIMEOUT=60000
+    volumes:
+      - /opt/homelab/datos/shelfmark/config:/config
+      - /mnt/usb/media/libros:/books
+      - /mnt/usb/media/audiolibros:/audiobooks
+      - /mnt/usb/media/descargas:/downloads
+    networks:
+      - proxy
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 192m
+    cpus: 1.0
+    healthcheck:
+      test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8084/api/health', timeout=5)\" || curl -fsS http://127.0.0.1:8084/api/health >/dev/null"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      diun.enable: "true"
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+networks:
+  proxy:
+    external: true

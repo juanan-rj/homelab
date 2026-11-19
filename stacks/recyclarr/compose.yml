@@ -1,0 +1,30 @@
+name: recyclarr
+
+services:
+  recyclarr:
+    image: ghcr.io/recyclarr/recyclarr:8.8.1
+    container_name: recyclarr
+    restart: unless-stopped
+    user: 1000:1000
+    env_file: .env
+    environment:
+      - TZ=Europe/Madrid
+      - CRON_SCHEDULE=@daily
+    volumes:
+      - /opt/homelab/datos/recyclarr:/config
+      - /opt/homelab/config/stacks/recyclarr/recyclarr.yml:/config/recyclarr.yml:ro
+    networks:
+      - proxy
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 128m
+    labels:
+      diun.enable: "true"
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+networks:
+  proxy:
+    external: true

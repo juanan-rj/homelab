@@ -1,0 +1,39 @@
+name: stirling-pdf
+
+services:
+  stirling-pdf:
+    image: stirlingtools/stirling-pdf:3.3.0-ultra-lite
+    container_name: stirling-pdf
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/api/v1/info/status | grep -q UP"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 180s
+    environment:
+      - TZ=Europe/Madrid
+      - DOCKER_ENABLE_SECURITY=false
+      - SECURITY_ENABLELOGIN=false
+      - SYSTEM_DEFAULTLOCALE=es-ES
+      - UI_APPNAME=Stirling-PDF
+      - LANGS=es_ES,en_US
+      - STIRLING_AOT_ENABLE=false
+    volumes:
+      - /opt/homelab/datos/stirling-pdf/configs:/configs
+      - /opt/homelab/datos/stirling-pdf/customFiles:/customFiles
+      - /opt/homelab/datos/stirling-pdf/logs:/logs
+    networks:
+      - proxy
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 512m
+    cpus: 0.5
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+networks:
+  proxy:
+    external: true

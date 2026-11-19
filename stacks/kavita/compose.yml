@@ -1,0 +1,23 @@
+services:
+  kavita:
+    image: ghcr.io/kareadita/kavita:0.9.1@sha256:31181a32f0dda73cae68721867028a7253d57881b58bea5754cd9e578e75421a # v0.9.1.4
+    container_name: kavita
+    restart: unless-stopped
+    networks:
+      - proxy
+    volumes:
+      - /opt/homelab/datos/kavita/data:/kavita/config
+      - /mnt/usb/media/libros:/data/books
+    environment:
+      - TZ=Europe/Madrid
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 256m
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+networks:
+  proxy:
+    external: true

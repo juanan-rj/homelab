@@ -1,0 +1,29 @@
+services:
+  mealie:
+    image: ghcr.io/mealie-recipes/mealie:v3.31.0
+    container_name: mealie
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Madrid
+      - BASE_URL=https://cocina.example.com
+      - DB_ENGINE=sqlite
+      - ALLOW_SIGNUP=false
+    volumes:
+      - /opt/homelab/datos/mealie/data:/app/data
+    networks:
+      - proxy
+    mem_limit: 320m
+    security_opt:
+      - no-new-privileges:true
+    labels:
+      diun.enable: "true"
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+networks:
+  proxy:
+    external: true

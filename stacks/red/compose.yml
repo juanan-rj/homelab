@@ -1,0 +1,57 @@
+name: red
+
+services:
+  caddy:
+    build:
+      context: ../../caddy
+    image: homelab/caddy:2.11.9-cloudflare-0.2.4
+    container_name: caddy
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ../../caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - /opt/homelab/datos/caddy/data:/data
+      - /opt/homelab/datos/caddy/config:/config
+    networks: [proxy]
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 128m
+    labels:
+      diun.enable: "false"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:2019/config/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+  adguard:
+    image: adguard/adguardhome:v0.107.80
+    container_name: adguard
+    restart: unless-stopped
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+    volumes:
+      - /opt/homelab/datos/adguard/conf:/opt/adguardhome/conf
+      - /opt/homelab/datos/adguard/work:/opt/adguardhome/work
+    networks: [proxy]
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 192m
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+networks:
+  proxy:
+    name: proxy

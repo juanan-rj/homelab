@@ -1,0 +1,132 @@
+# Las credenciales (SLSKD_API_KEY, SLSKD_SLSK_USERNAME/PASSWORD opcionales) viven en /opt/homelab/secretos/musica.env (.env). Nunca aquí.
+name: musica
+
+services:
+  navidrome:
+    image: deluan/navidrome:0.64.2
+    container_name: navidrome
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:4533/ping"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - proxy
+    environment:
+      - ND_SCANSCHEDULE=1h
+      - ND_LOGLEVEL=info
+      - ND_SESSIONTIMEOUT=24h
+      - ND_BASEURL=https://musica.example.com
+      - ND_ENABLETRANSCODINGCONFIG=true
+      - TZ=Europe/Madrid
+    volumes:
+      - /opt/homelab/datos/navidrome/data:/data
+      - /mnt/usb/media/music:/music:ro
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 128m
+    labels:
+      diun.enable: "true"
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+  slskd:
+    image: slskd/slskd:0.26.2
+    container_name: slskd
+    restart: unless-stopped
+    user: "1000:1000"
+    env_file: .env
+    environment:
+      - TZ=Europe/Madrid
+      - SLSKD_REMOTE_CONFIGURATION=true
+      - SLSKD_DOWNLOADS_DIR=/downloads
+      - SLSKD_INCOMPLETE_DIR=/incomplete
+    ports:
+      - "50300:50300/tcp"
+    volumes:
+      - /opt/homelab/datos/slskd:/app
+      - /mnt/usb/media/descargas/soulseek:/downloads
+      - /mnt/usb/media/descargas/incompletas/soulseek:/incomplete
+      - /mnt/usb/media/music:/music:ro
+    networks:
+      - proxy
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 160m
+    labels:
+      diun.enable: "true"
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+  soulsync:
+    image: boulderbadgedad/soulsync:3.6.6
+    container_name: soulsync
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - UMASK=022
+      - TZ=Europe/Madrid
+      - PYTHONPATH=/app
+      - SOULSYNC_CONFIG_PATH=/app/config/config.json
+    volumes:
+      - /opt/homelab/datos/soulsync/config:/app/config
+      - /opt/homelab/datos/soulsync/data:/app/data
+      - /opt/homelab/datos/soulsync/logs:/app/logs
+      - /mnt/usb/media/descargas/soulseek:/app/downloads
+      - /mnt/usb/media/music:/app/Transfer
+      - /mnt/usb/media/audiolibros:/app/audiobooks
+    depends_on:
+      - slskd
+    networks:
+      - proxy
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 256m
+    healthcheck:
+      test: ["CMD", "curl", "-f", "--max-time", "5", "http://localhost:8008/api/startup-status"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    labels:
+      diun.enable: "true"
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+  multi-scrobbler:
+    image: foxxmd/multi-scrobbler:0.21.0@sha256:d3dacd94c5e6629d9a01579c2e4484de9440c1755dcbaae2ffb50d19b18793a0
+    container_name: multi-scrobbler
+    hostname: multi-scrobbler
+    restart: unless-stopped
+    user: "1000:1000"
+    environment:
+      - TZ=Europe/Madrid
+      - BASE_URL=https://scrobbler.example.com
+    volumes:
+      - /opt/homelab/datos/multi-scrobbler:/config
+    networks:
+      - proxy
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 144m
+    cpus: 0.5
+    labels:
+      diun.enable: "true"
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+networks:
+  proxy:
+    external: true

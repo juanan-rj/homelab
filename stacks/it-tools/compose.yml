@@ -1,0 +1,21 @@
+# sharevb/it-tools usa nginx-unprivileged y escucha en puerto 8080 (en lugar de 80).
+name: it-tools
+
+services:
+  it-tools:
+    image: sharevb/it-tools:2026.10.25@sha256:c6e68a94af10c73cb4e53eaa78726d8abbbb4ad1a89a3f127a69f85a9ae029ab
+    container_name: it-tools
+    restart: unless-stopped
+    networks:
+      - proxy
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 64m
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+networks:
+  proxy:
+    external: true

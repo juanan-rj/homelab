@@ -1,0 +1,39 @@
+services:
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:0.13.3
+    container_name: open-webui
+    restart: unless-stopped
+    networks:
+      - proxy
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 768m
+    volumes:
+      - /opt/homelab/datos/open-webui:/app/backend/data
+    env_file:
+      - .env
+    environment:
+      - OPENAI_API_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai
+      - OPENAI_API_KEY=${GEMINI_API_KEY:-}
+      - ENABLE_OLLAMA_API=False
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - WEBUI_NAME=Homelab AI
+      - DEFAULT_MODELS=models/gemini-3.5-flash
+      - DEFAULT_USER_ROLE=user
+      - ENABLE_MODEL_FILTER=True
+      - MODEL_FILTER_LIST=models/gemini-3.5-flash
+      - TZ=Europe/Madrid
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+networks:
+  proxy:
+    external: true

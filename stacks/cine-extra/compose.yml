@@ -1,0 +1,53 @@
+services:
+  bazarr:
+    image: lscr.io/linuxserver/bazarr:v1.6.2-ls372
+    container_name: bazarr
+    restart: unless-stopped
+    networks:
+      - proxy
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Madrid
+    volumes:
+      - /opt/homelab/datos/bazarr/config:/config
+      - /mnt/usb/media:/media
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 256m
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+  flaresolverr:
+    image: ghcr.io/thephaseless/byparr:3.1.1@sha256:c66fa161187b8fa527bfad7eefa2647ea1c553f77df68cbffd6fe83366d1787b
+    container_name: flaresolverr
+    hostname: flaresolverr
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    shm_size: 512m
+    mem_limit: 1024m
+    cpus: 1.5
+    networks:
+      - proxy
+    environment:
+      - LOG_LEVEL=info
+      - TZ=Europe/Madrid
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8191/openapi.json"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    labels:
+      diun.enable: "true"
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+networks:
+  proxy:
+    external: true

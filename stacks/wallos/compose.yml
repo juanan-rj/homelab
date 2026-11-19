@@ -1,0 +1,25 @@
+name: wallos
+
+services:
+  wallos:
+    image: bellamy/wallos:5.11.1
+    container_name: wallos
+    restart: unless-stopped
+    environment:
+      TZ: Europe/Madrid
+    volumes:
+      - /opt/homelab/datos/wallos/db:/var/www/html/db
+      - /opt/homelab/datos/wallos/logos:/var/www/html/images/uploads/logos
+    networks:
+      - proxy
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 128m
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+networks:
+  proxy:
+    external: true

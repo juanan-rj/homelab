@@ -1,0 +1,56 @@
+name: changedetection
+
+services:
+  changedetection:
+    image: ghcr.io/dgtlmoon/changedetection.io:0.70.3
+    container_name: changedetection
+    restart: unless-stopped
+    environment:
+      - BASE_URL=https://ofertas.example.com
+      - TZ=Europe/Madrid
+      - USE_X_SETTINGS=1
+      - HIDE_REFERER=true
+      - PLAYWRIGHT_DRIVER_URL=ws://playwright-chrome:3000
+    volumes:
+      - /opt/homelab/datos/changedetection/datastore:/datastore
+    depends_on:
+      - playwright-chrome
+    networks:
+      - proxy
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 128m
+    labels:
+      diun.enable: "true"
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+  playwright-chrome:
+    image: dgtlmoon/sockpuppetbrowser:0.0.5@sha256:71fed9b1de8de865a8f30c61e6d8d129de183bf34f8cc545dc7ae499198ec935
+    container_name: playwright-chrome
+    restart: unless-stopped
+    environment:
+      - SCREEN_WIDTH=1920
+      - SCREEN_HEIGHT=1024
+      - SCREEN_DEPTH=16
+      - MAX_CONCURRENT_CHROME_PROCESSES=3
+      - DROP_EXCESS_CONNECTIONS=False
+      - CONNECTION_QUEUE_TIMEOUT=60
+    networks:
+      - proxy
+    security_opt:
+      - no-new-privileges:true
+    shm_size: 256m
+    mem_limit: 768m
+    labels:
+      diun.enable: "true"
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+networks:
+  proxy:
+    external: true

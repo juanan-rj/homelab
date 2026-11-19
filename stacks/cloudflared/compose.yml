@@ -1,0 +1,30 @@
+# Túnel de Cloudflare: único acceso desde fuera de casa. No abre puertos.
+# El túnel se gestiona desde el panel de Cloudflare (Zero Trust > Networks > Tunnels): cada
+# Public Hostname apunta a https://caddy:443 con su Origin Server Name. Hoy solo: brain.
+name: cloudflared
+
+services:
+  cloudflared:
+    image: cloudflare/cloudflared:2026.11.0
+    container_name: cloudflared
+    restart: unless-stopped
+    command: ["tunnel", "--no-autoupdate", "run"]
+    env_file:
+      - ./cloudflared.env # Enlace a /opt/homelab/secretos/cloudflared.env (TUNNEL_TOKEN), lo crea deploy-remoto.sh
+    networks:
+      - proxy
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    mem_limit: 64m
+    labels:
+      diun.enable: "true"
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+networks:
+  proxy:
+    external: true

@@ -1,0 +1,25 @@
+# https://estado.example.com
+name: uptime-kuma
+
+services:
+  uptime-kuma:
+    image: louislam/uptime-kuma:2.5.11@sha256:7554dba313c84e44fee921ef3b5626ba1c711e412e82815e8c957517026112a9
+    container_name: uptime-kuma
+    restart: unless-stopped
+    volumes:
+      - /opt/homelab/datos/uptime-kuma:/app/data
+    networks:
+      - proxy
+    mem_limit: 256m
+    security_opt:
+      - no-new-privileges:true
+    labels:
+      diun.enable: "true"
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+networks:
+  proxy:
+    external: true

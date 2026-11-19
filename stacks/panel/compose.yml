@@ -1,0 +1,134 @@
+# Los tres leen Docker en modo solo lectura (:ro). Nada de esto está expuesto a Internet.
+name: panel
+
+services:
+  socket-proxy:
+    image: tecnativa/docker-socket-proxy:v0.5.0
+    container_name: socket-proxy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:2375/_ping"]
+      interval: 60s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    environment:
+    # Permisos requeridos por Homepage, Dozzle y Diun (estrictamente solo lectura):
+    # - CONTAINERS: 1 (/containers/json, /containers/{id}/stats para Homepage y /logs para Dozzle)
+    # - IMAGES: 1 (/images/json para Homepage y Diun)
+    # - INFO: 1 (/info para Homepage metricas del sistema Docker)
+    # - VERSION: 1 (/version para verificacion de API)
+    # - EVENTS: 1 (/events para Dozzle y Homepage eventos en vivo)
+    # - PING: 1 (/_ping para comprobacion rapida de conectividad)
+    # - POST: 0 bloquea cualquier mutacion, asegurando modo solo lectura
+      CONTAINERS: "1"
+      IMAGES: "1"
+      INFO: "1"
+      VERSION: "1"
+      EVENTS: "1"
+      PING: "1"
+      POST: "0"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks: [socket-ro]
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /run:size=16M
+      - /tmp:size=16M
+    mem_limit: 32m
+    labels:
+      diun.enable: "true"
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+  homepage:
+    image: ghcr.io/gethomepage/homepage:v2.8.0
+    container_name: homepage
+    restart: unless-stopped
+    depends_on: [socket-proxy]
+    env_file: .env
+    environment:
+      HOMEPAGE_ALLOWED_HOSTS: example.com,*.example.com,hub.example.com,homepage,homepage:3000,192.168.1.10,localhost,127.0.0.1
+      TZ: Europe/Madrid
+    volumes:
+      - ../../panel/homepage:/app/config
+      - /mnt/usb:/mnt/usb:ro
+    networks: [proxy, socket-ro]
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 192m
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+  dozzle:
+    image: amir20/dozzle:v11.4.3
+    container_name: dozzle
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "/dozzle", "healthcheck"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    depends_on: [socket-proxy]
+    environment:
+      DOZZLE_AUTH_PROVIDER: simple
+      DOZZLE_NO_ANALYTICS: "true"
+      DOZZLE_HOSTNAME: homelab
+      DOZZLE_REMOTE_HOST: tcp://socket-proxy:2375|homelab
+    volumes:
+      - /opt/homelab/datos/dozzle:/data
+    networks: [proxy, socket-ro]
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 64m
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+  diun:
+    image: crazymax/diun:4.33.1
+    container_name: diun
+    restart: unless-stopped
+    depends_on: [socket-proxy]
+    command: serve
+    env_file: diun.env
+    environment:
+      TZ: Europe/Madrid
+      LOG_LEVEL: info
+      DOCKER_HOST: tcp://socket-proxy:2375
+      DIUN_WATCH_SCHEDULE: "0 9 * * 1"
+      DIUN_WATCH_FIRSTCHECKNOTIF: "false"
+      DIUN_WATCH_JITTER: 30s
+      DIUN_PROVIDERS_DOCKER: "true"
+      DIUN_PROVIDERS_DOCKER_WATCHBYDEFAULT: "true"
+      DIUN_DEFAULTS_WATCHREPO: "true"
+      DIUN_DEFAULTS_SORTTAGS: semver
+      DIUN_DEFAULTS_MAXTAGS: "3"
+      DIUN_DEFAULTS_INCLUDETAGS: '^v?[0-9]+\.[0-9]+\.[0-9]+$'
+      DIUN_NOTIF_WEBHOOK_ENDPOINT: http://homelab-bot:8000/webhook/diun
+      DIUN_NOTIF_WEBHOOK_METHOD: POST
+    volumes:
+      - /opt/homelab/datos/diun:/data
+    networks: [socket-ro, proxy]
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 64m
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+networks:
+  proxy:
+    external: true
+  socket-ro:
+    name: socket-ro
+    driver: bridge

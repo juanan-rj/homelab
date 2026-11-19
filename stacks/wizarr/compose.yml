@@ -1,0 +1,30 @@
+name: wizarr
+
+services:
+  wizarr:
+    image: ghcr.io/wizarrrr/wizarr:v2026.10.1@sha256:08f2c6de534ec7d36d39a4f55b7c5c379021ca881dc519c702aad0ddafbdc67a
+    container_name: wizarr
+    hostname: wizarr
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Madrid
+    volumes:
+      - /opt/homelab/datos/wizarr/database:/data/database
+    networks:
+      - proxy
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 224m
+    cpus: 0.5
+    labels:
+      diun.enable: "true"
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+networks:
+  proxy:
+    external: true

@@ -1,0 +1,31 @@
+# Inventario de casa y garantías. Registro CERRADO salvo cuando lo abre el bloque 05c (HB_REGISTRO=true).
+name: homebox
+
+services:
+  homebox:
+    image: ghcr.io/sysadminsmedia/homebox:0.27.1
+    container_name: homebox
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      HBOX_OPTIONS_ALLOW_REGISTRATION: ${HB_REGISTRO:-false}
+      HBOX_OPTIONS_TRUST_PROXY: "true"
+      HBOX_OPTIONS_ALLOW_ANALYTICS: "false"
+      HBOX_WEB_MAX_UPLOAD_SIZE: "25"
+      HBOX_LOG_LEVEL: info
+      HBOX_LOG_FORMAT: text
+      TZ: Europe/Madrid
+    volumes:
+      - /opt/homelab/datos/homebox:/data
+    networks: [proxy]
+    mem_limit: 96m
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+networks:
+  proxy:
+    external: true

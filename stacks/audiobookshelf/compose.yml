@@ -1,0 +1,33 @@
+name: audiobookshelf
+
+services:
+  audiobookshelf:
+    image: ghcr.io/advplyr/audiobookshelf:2.37.2
+    container_name: audiobookshelf
+    restart: unless-stopped
+    environment:
+      - AUDIOBOOKSHELF_UID=1000
+      - AUDIOBOOKSHELF_GID=1000
+      - TZ=Europe/Madrid
+      - PORT=80
+    volumes:
+      - /opt/homelab/datos/audiobookshelf/config:/config
+      - /opt/homelab/datos/audiobookshelf/metadata:/metadata
+      # Los audiolibros viven en el USB; /audiolibro los descarga aqui con qBittorrent.
+      - /mnt/usb/media/audiolibros:/audiobooks
+      - /opt/homelab/datos/audiobookshelf/podcasts:/podcasts
+    networks:
+      - proxy
+    mem_limit: 512m
+    security_opt:
+      - no-new-privileges:true
+    labels:
+      diun.enable: "true"
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+networks:
+  proxy:
+    external: true

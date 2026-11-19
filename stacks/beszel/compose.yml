@@ -1,0 +1,92 @@
+name: beszel
+
+services:
+  beszel:
+    image: henrygd/beszel:0.21.2
+    container_name: beszel
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "/beszel", "health", "--url", "http://localhost:8090"]
+      interval: 120s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    environment:
+      APP_URL: "https://hw.example.com"
+    volumes:
+      - /opt/homelab/datos/beszel/data:/beszel_data
+      - /opt/homelab/datos/beszel/socket:/beszel_socket
+    networks:
+      - proxy
+    mem_limit: 128m
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+  # Proxy de solo lectura: el agente solo necesita listar contenedores (beszel.dev, CONTAINERS=1).
+  # Monta docker.sock en lugar del agente; no permite POST. Publica solo en 127.0.0.1
+  # porque el agente usa la red del host.
+  socket-proxy-beszel:
+    image: tecnativa/docker-socket-proxy:v0.5.0
+    container_name: socket-proxy-beszel
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:2375/_ping"]
+      interval: 60s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    environment:
+      CONTAINERS: "1"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    ports:
+      - "127.0.0.1:2376:2375"
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /run:size=16M
+      - /tmp:size=16M
+    mem_limit: 32m
+    labels:
+      diun.enable: "true"
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+  beszel-agent:
+    image: henrygd/beszel-agent:0.21.2
+    container_name: beszel-agent
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "/agent", "health"]
+      interval: 120s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    network_mode: host
+    depends_on: [socket-proxy-beszel]
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      DOCKER_HOST: tcp://127.0.0.1:2376
+    volumes:
+      - /opt/homelab/datos/beszel/agent:/var/lib/beszel-agent
+      - /opt/homelab/datos/beszel/socket:/beszel_socket
+      - /mnt/usb/.beszel:/extra-filesystems/usb:ro
+    env_file:
+      - ./beszel.env # Symlink hacia /opt/homelab/secretos/beszel.env (gestionado por fase30.sh/fase45.sh)
+    mem_limit: 64m
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+networks:
+  proxy:
+    external: true

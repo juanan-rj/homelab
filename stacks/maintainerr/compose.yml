@@ -1,0 +1,26 @@
+name: maintainerr
+
+services:
+  maintainerr:
+    image: ghcr.io/maintainerr/maintainerr:3.32.0
+    container_name: maintainerr
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/Madrid
+    volumes:
+      - /opt/homelab/datos/maintainerr/data:/opt/data
+    networks:
+      - proxy
+    mem_limit: 192m
+    security_opt:
+      - no-new-privileges:true
+    labels:
+      diun.enable: "true"
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+networks:
+  proxy:
+    external: true

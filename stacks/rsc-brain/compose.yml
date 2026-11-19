@@ -1,0 +1,97 @@
+# ==============================================================================
+#  RSC Brain v0.7.1 (ericrisco/rsc-brain) — Memoria persistente MCP / Wiki
+#  - Imagen construida desde tag/commit fijado v0.7.1 (sin :latest)
+#  - Base de datos PostgreSQL 17.12 oficial en red interna aislada (unaccent + FTS ES/EN)
+#  - Expone HTTP/MCP :8090 unicamente hacia Caddy (https://brain.example.com) y bot
+# ==============================================================================
+services:
+  rsc-brain-db:
+    image: postgres:17.12-alpine@sha256:a77aa70e641402a21411b92b721c58d10f23b50ae5fdd2333efd22d166e1e5f7
+    container_name: rsc-brain-db
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 128m
+    cpus: "1.0"
+    environment:
+      POSTGRES_USER: rscbrain
+      POSTGRES_DB: rscbrain
+      POSTGRES_PASSWORD: ${RSC_BRAIN_PG_PASSWORD:?falta RSC_BRAIN_PG_PASSWORD en .env}
+      TZ: Europe/Madrid
+    volumes:
+      - /opt/homelab/datos/rsc-brain/pgdata:/var/lib/postgresql/data
+    networks:
+      - rsc_brain_internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rscbrain -d rscbrain"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+  rsc-brain:
+    image: homelab/rsc-brain:v0.7.1
+    build:
+      context: https://github.com/ericrisco/rsc-brain.git#566ef3a6e2ba5a024d586fa8205048e0e14a1c68
+      dockerfile: Dockerfile
+    container_name: rsc-brain
+    restart: unless-stopped
+    user: "1000:1000"
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 256m
+    cpus: "1.5"
+    depends_on:
+      rsc-brain-db:
+        condition: service_healthy
+    environment:
+      RSC_BRAIN_DATABASE_URL: postgresql://rscbrain:${RSC_BRAIN_PG_PASSWORD:?falta RSC_BRAIN_PG_PASSWORD en .env}@rsc-brain-db:5432/rscbrain
+      RSC_BRAIN_HOST: 0.0.0.0
+      RSC_BRAIN_PORT: "8090"
+      RSC_BRAIN_TIMEZONE: Europe/Madrid
+      RSC_BRAIN_SECRET: ${RSC_BRAIN_SECRET:?falta RSC_BRAIN_SECRET en .env}
+      RSC_BRAIN_LOCAL_ONLY: "0"
+      RSC_BRAIN_BACKUPS: /backups
+      RSC_BRAIN_BACKUP_AT: "03:00"
+      RSC_BRAIN_BACKUP_KEEP: "14"
+      RSC_BRAIN_REPO_URL: https://github.com/ericrisco/rsc-brain
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        CADDY_IP=""
+        for i in 1 2 3 4 5 6 7 8 9 10; do
+          CADDY_IP=$$(getent hosts caddy | awk '{print $$1; exit}')
+          [ -n "$$CADDY_IP" ] && break
+          sleep 2
+        done
+        if [ -n "$$CADDY_IP" ]; then
+          export RSC_BRAIN_TRUSTED_PROXIES="$${RSC_BRAIN_TRUSTED_PROXIES:+$${RSC_BRAIN_TRUSTED_PROXIES},}$${CADDY_IP}"
+        fi
+        exec rsc-brain serve
+    volumes:
+      - /opt/homelab/datos/rsc-brain/backups:/backups
+    networks:
+      - proxy
+      - rsc_brain_internal
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8090/v1/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+networks:
+  proxy:
+    external: true
+  rsc_brain_internal:
+    driver: bridge
+    internal: true

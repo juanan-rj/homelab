@@ -1,0 +1,27 @@
+name: convertx
+
+services:
+  convertx:
+    image: ghcr.io/c4illin/convertx:v0.20.0
+    container_name: convertx
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/Madrid
+    volumes:
+      - /opt/homelab/datos/convertx:/app/data
+    networks:
+      - proxy
+    security_opt:
+      - no-new-privileges:true
+    cpus: "2.0"
+    mem_limit: 512m
+    labels:
+      diun.enable: "true"
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+networks:
+  proxy:
+    external: true

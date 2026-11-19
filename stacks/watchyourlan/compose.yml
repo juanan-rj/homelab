@@ -1,0 +1,25 @@
+name: watchyourlan
+
+services:
+  watchyourlan:
+    image: aceberg/watchyourlan:2.1.4
+    container_name: watchyourlan
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - IFACE=enp2s0
+      - TZ=Europe/Madrid
+      - PORT=8840
+      - TIMEOUT=60
+    volumes:
+      - /opt/homelab/datos/watchyourlan:/data
+    mem_limit: 64m
+    security_opt:
+      - no-new-privileges:true
+    labels:
+      diun.enable: "true"
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"

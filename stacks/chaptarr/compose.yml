@@ -1,0 +1,32 @@
+name: chaptarr
+
+services:
+  chaptarr:
+    image: chaptarr/chaptarr:0.9.1000
+    container_name: chaptarr
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - UMASK=002
+      - TZ=Europe/Madrid
+    volumes:
+      - /opt/homelab/datos/chaptarr/config:/config
+      - /mnt/usb/media/audiolibros:/audiobooks
+      - /mnt/usb/media/libros:/ebooks
+      - /mnt/usb/media:/media
+    networks:
+      - proxy
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 256m
+    labels:
+      diun.enable: "true"
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+networks:
+  proxy:
+    external: true

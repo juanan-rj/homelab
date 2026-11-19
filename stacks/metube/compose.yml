@@ -1,0 +1,36 @@
+name: metube
+
+services:
+  metube:
+    image: ghcr.io/alexta69/metube:2026.11.14
+    container_name: metube
+    restart: unless-stopped
+    user: "1000:1000"
+    environment:
+      - UID=1000
+      - GID=1000
+      - DOWNLOAD_DIR=/downloads
+      - AUDIO_DOWNLOAD_DIR=/downloads
+      - STATE_DIR=/downloads/.metube
+      - TEMP_DIR=/downloads/.tmp
+      - DELETE_FILE_ON_TRASHCAN=true
+      - YTDL_OPTIONS={"format":"bestvideo+bestaudio/best"}
+    volumes:
+      - /mnt/usb/media/descargas/videos:/downloads
+      - /opt/homelab/datos/metube:/downloads/.metube
+    networks:
+      - proxy
+    security_opt:
+      - no-new-privileges:true
+    cpus: "1.5"
+    mem_limit: 128m
+    labels:
+      diun.enable: "true"
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+networks:
+  proxy:
+    external: true
